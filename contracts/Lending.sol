@@ -63,13 +63,14 @@ contract Lending {
 
         Token(addrBUSD).transferFrom(msg.sender, address(this), WBNBcount*deposite);
         Token(addrWBNB).transferFrom(address(this), msg.sender, WBNBcount);
-        if(Token(addrWBNB).balanceOf(address(this))<0)
+        if(Token(addrWBNB).balanceOf(address(this))==0)
            loanIsPossible = false;
         emit borrowedTokens(msg.sender);
 
     }
 
     function repay() public payable{
+        require(borrower[msg.sender].loanAmount!=0);
         require(block.timestamp<=borrower[msg.sender].time+creditTerm);
         uint pay = refundAmount(msg.sender);
         require(Token(addrWBNB).allowance( msg.sender, address(this)) >= pay);
@@ -77,6 +78,9 @@ contract Lending {
         Token(addrWBNB).transferFrom(msg.sender, address(this), pay);
         Token(addrBUSD).transferFrom(address(this), msg.sender, borrower[msg.sender].loanAmount);
 
+        borrower[msg.sender].loanAmount=0;
+        borrower[msg.sender].time=0;
+        loanIsPossible = true;
         emit repayTokens(msg.sender);
     }
    
